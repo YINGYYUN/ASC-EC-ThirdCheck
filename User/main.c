@@ -18,11 +18,7 @@ int main(void)
 	LED_Init();
 	Key_Init();
 	Timer_Init();
-	
-	OLED_ShowString(1,1,"i:");
-	OLED_ShowString(2,1,"LED1Mode:");
-	OLED_ShowString(3,1,"LED2Mode:");
-	
+
 	while(1)
 	{
 		KeyNum = Key_GetNum();
@@ -40,10 +36,6 @@ int main(void)
 			LED2_SetMode(LED1Mode);
 		}
 		
-		OLED_ShowNum(1, 3, i++, 5);
-		OLED_ShowNum(2, 10, LED1Mode, 1);
-		OLED_ShowNum(3, 10, LED2Mode, 1);
-
 	}
 		
 }
