@@ -755,6 +755,16 @@
               <FileType>5</FileType>
               <FilePath>.\Hardware\LineSensor.h</FilePath>
             </File>
+            <File>
+              <FileName>Car.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Hardware\Car.c</FilePath>
+            </File>
+            <File>
+              <FileName>Car.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Hardware\Car.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

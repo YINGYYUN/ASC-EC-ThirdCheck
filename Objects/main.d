@@ -34,6 +34,7 @@
 .\objects\main.o: .\Hardware\Key.h
 .\objects\main.o: .\Hardware\Serial.h
 .\objects\main.o: D:\KeilC51\ARM\ARMCC\Bin\..\include\stdio.h
+.\objects\main.o: .\Hardware\Car.h
 .\objects\main.o: .\Hardware\Motor.h
 .\objects\main.o: .\Hardware\OLED.h
 .\objects\main.o: .\Hardware\OLED_Data.h

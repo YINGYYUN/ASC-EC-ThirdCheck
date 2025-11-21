@@ -6,6 +6,7 @@
 #include "LED.h"
 #include "Key.h"
 #include "Serial.h"
+#include "Car.h"
 #include "Motor.h"
 #include "OLED.h"
 #include "LineSensor.h"
@@ -31,6 +32,11 @@ uint8_t g_joystick_data_ready = 0;//数据就绪标志
 #define MAX_SPEED 99    // 最大PWM值 (电机函数限制为99)
 
 void Handle_Manual_Control(void);
+
+//存放红外对射式传感器数据
+uint8_t sensorData[4];
+
+void Handle_Tracking_Control(void);
 
 int main(void)
 {	
@@ -82,8 +88,8 @@ int main(void)
 	printf("[display,0,%d,>]", 16 * Main_Menu_Location);
 /* =================== [END] 菜单初始化模块 [END] =================== */	
 	
-	//存放红外对射式传感器数据
-	uint8_t sensorData[4];
+	
+	
 	
 	while(1)
 	{
@@ -266,7 +272,8 @@ int main(void)
 						OLED_Clear();
 					
 						OLED_Printf(0, 0, OLED_8X16, "Tracking Mode");
-						OLED_Printf(0, 16, OLED_8X16, "M2134:%d %d %d %d",
+						OLED_Printf(0, 16, OLED_8X16, "[2]  [1][3]  [4]");
+						OLED_Printf(0, 32, OLED_8X16, " %d    %d  %d    %d ",
 								sensorData[1], sensorData[0], sensorData[2], sensorData[3]);
 						
 						OLED_Update();
@@ -274,8 +281,9 @@ int main(void)
 						printf("[display-clear]");
 					
 						printf("[display,0,0,Tracking Mode]");
-						printf("[display,0,16,M2134:%d %d %d %d]", 
-								sensorData[1], sensorData[0], sensorData[2], sensorData[3]);					
+						printf("[display,0,16,|2|  |1||3|  |4|]");
+						printf("[display,0,32, %d    %d  %d    %d ]", 
+								sensorData[1], sensorData[0], sensorData[2], sensorData[3]);
 					
 						break;
 					
@@ -305,8 +313,7 @@ int main(void)
 				FUNCTION_State = F_Mian_Menu;
 				
 					//一次停止指令
-					Motor_SetPWM1(0);
-					Motor_SetPWM2(0);
+					Car_Stop();
 				
 					OLED_Clear();
 	
@@ -339,8 +346,7 @@ int main(void)
 			case F_Mian_Menu:
 				
 		 		//二次停止指令
-				Motor_SetPWM1(0);
-				Motor_SetPWM2(0);
+				Car_Stop();
 			
 				//数据重置
 				break;
@@ -349,17 +355,17 @@ int main(void)
 				//传感器数据读取
 				LineSensor_Read(sensorData);
 			
-				OLED_Printf(0, 16, OLED_8X16, "M2134:%d %d %d %d",
+				OLED_Printf(0, 32, OLED_8X16, " %d    %d  %d    %d ",
 						sensorData[1], sensorData[0], sensorData[2], sensorData[3]);
 			
 				//传感器示意图 [M2]			 [M1] [M3]			[M4]
 				
 				OLED_Update();
 				
-				printf("[display,0,16,M2134:%d %d %d %d]", 
+				printf("[display,0,32, %d    %d  %d    %d ]", 
 						sensorData[1], sensorData[0], sensorData[2], sensorData[3]);					
 			
-			
+				Handle_Tracking_Control();
 			
 				break;
 			
@@ -388,7 +394,102 @@ int main(void)
 
 
 
-/* =================== [START] 摇杆数据接收和电机底层控制模块 [START] =================== */
+/* =================== [START] 自动巡线控制模块 [START] =================== */
+
+void Handle_Tracking_Control(void)
+{
+	//1为白,0为黑
+	if ( sensorData[1] == 1 &&
+		 sensorData[0] == 0 &&
+		 sensorData[2] == 0 &&
+		 sensorData[3] == 1)
+	{
+		Go_Ahead();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
+		OLED_Update();
+		printf("[display,0,48,                ]");
+		printf("[display,0,48,Go_Ahead]");
+	}
+	else 
+	if ( sensorData[1] == 1 &&
+		 sensorData[0] == 1 &&
+		 sensorData[2] == 1 &&
+		 sensorData[3] == 1)
+	{
+		Go_Ahead();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
+		OLED_Update();
+		printf("[display,0,48,                ]");
+		printf("[display,0,48,Go_Ahead]");
+	}
+	else 
+	if ( sensorData[1] == 1 &&
+		 sensorData[0] == 0 &&
+		 sensorData[2] == 1 &&
+		 sensorData[3] == 1)
+	{
+		Turn_Left();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Turn_Left");
+		OLED_Update();
+		printf("[display,0,48,                ]");
+		printf("[display,0,48,Turn_Left]");
+	}
+	else 
+	if ( sensorData[1] == 1 &&
+		 sensorData[0] == 1 &&
+		 sensorData[2] == 0 &&
+		 sensorData[3] == 1)
+	{
+		Turn_Right();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Turn_Right");
+		OLED_Update();
+		printf("[display,0,48,                ]");
+		printf("[display,0,48,Turn_Right]");
+	}
+	else 
+	if ( sensorData[1] == 0 &&
+		 sensorData[0] == 0 &&
+		 sensorData[2] == 1 &&
+		 sensorData[3] == 1)
+	{
+		Self_Left();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Left");
+		OLED_Update();
+		printf("[display,0,48,                ]");
+		printf("[display,0,48,Self_Left]");
+	}
+	else 
+	if ( sensorData[1] == 1 &&
+		 sensorData[0] == 1 &&
+		 sensorData[2] == 0 &&
+		 sensorData[3] == 0)
+	{
+		Self_Right();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Right");
+		OLED_Update();
+		printf("[display,0,48,                ]");
+		printf("[display,0,48,Self_Right]");
+	}
+}
+
+/* =================== [END] 自动巡线控制模块 [END] =================== */
+
+
+
+
+/* =================== [START] 手动摇杆控制模块 [START] =================== */
 
 void Handle_Manual_Control(void)
 {
@@ -429,7 +530,7 @@ void Handle_Manual_Control(void)
     Motor_SetPWM2(right_motor_pwm);
 }
 
-/* =================== [END] 摇杆数据接收和电机底层控制模块 [END] =================== */
+/* =================== [END] 手动摇杆控制模块 [END] =================== */
 
 
 
