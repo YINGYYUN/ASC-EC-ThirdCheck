@@ -23,14 +23,14 @@ void Motor_SetPWM1(int16_t PWM)
     if (pwm <= -100) pwm = -99;
 	if (pwm >= 0)
 	{
-		GPIO_SetBits(GPIOB, GPIO_Pin_12);
-		GPIO_ResetBits(GPIOB, GPIO_Pin_13);
+		GPIO_SetBits(GPIOB, GPIO_Pin_13);
+		GPIO_ResetBits(GPIOB, GPIO_Pin_12);
 		PWM_SetCompare2(pwm);
 	}
 	else
 	{
-		GPIO_ResetBits(GPIOB, GPIO_Pin_12);
-		GPIO_SetBits(GPIOB, GPIO_Pin_13);
+		GPIO_ResetBits(GPIOB, GPIO_Pin_13);
+		GPIO_SetBits(GPIOB, GPIO_Pin_12);
 		PWM_SetCompare2(-pwm);
 	}
 }

@@ -19,11 +19,18 @@
 uint8_t H_KeyNum;
 uint8_t Key_Event[3] = {0}; // 分别对应UP、DOWN、CONFIRM(BACK)
 
+//存储摇杆数据
+int8_t g_joystick_LH = 0; // 左摇杆横向 (Left Horizontal)
+int8_t g_joystick_LV = 0; // 左摇杆纵向 (Left Vertical)
+int8_t g_joystick_RH = 0; // 右摇杆横向 (Right Horizontal)
+int8_t g_joystick_RV = 0; // 右摇杆纵向 (Right Vertical)
 
+uint8_t g_joystick_data_ready = 0;//数据就绪标志
 
+#define DEAD_ZONE 10    // 摇杆死区
+#define MAX_SPEED 99    // 最大PWM值 (电机函数限制为99)
 
-
-
+void Handle_Manual_Control(void);
 
 int main(void)
 {	
@@ -74,9 +81,6 @@ int main(void)
 	printf("[display,16,32,%s],", Main_Menu[1]);
 	printf("[display,0,%d,>]", 16 * Main_Menu_Location);
 /* =================== [END] 菜单初始化模块 [END] =================== */	
-
-
-	
 	
 	//存放红外对射式传感器数据
 	uint8_t sensorData[4];
@@ -175,20 +179,30 @@ int main(void)
 //				}
 //			}
 //
-//			//摇杆解析
-//			else if (strcmp(Tag, "joystick") == 0)
-//			{
-//				//左摇杆横向值
-//				int8_t LH = atoi(strtok(NULL, ","));
-//				//左摇杆纵向值
-//				int8_t LV = atoi(strtok(NULL, ","));
-//				//右摇杆横向值
-//				int8_t RH = atoi(strtok(NULL, ","));
-//				//右摇杆纵向值
-//				int8_t RV = atoi(strtok(NULL, ","));
-//				
-//				printf("joystick, %d, %d, %d, %d\r\n", LH, LV, RH, RV);
-//			}			
+			//摇杆解析
+			else if (strcmp(Tag, "joystick") == 0 && FUNCTION_State == F_Manual_Mode)
+			{
+				
+				// 关闭全局中断，防止在写入全局变量时被打断
+//				__set_PRIMASK(1); 
+				
+				
+				//左摇杆横向值
+				g_joystick_LH = atoi(strtok(NULL, ","));
+				//左摇杆纵向值
+				g_joystick_LV = atoi(strtok(NULL, ","));
+				//右摇杆横向值
+				g_joystick_RH = atoi(strtok(NULL, ","));
+				//右摇杆纵向值
+				g_joystick_RV = atoi(strtok(NULL, ","));
+						
+				g_joystick_data_ready = 1;
+//				printf("joystick, %d, %d, %d, %d\r\n", 
+//						g_joystick_LH, g_joystick_LV, g_joystick_RH, g_joystick_RV);
+				
+				// 开启全局中断
+//				__set_PRIMASK(0);
+			}			
 			Serial_RxFlag = 0;
 		}
 /* =================== [END] 蓝牙收发与处理模块 [END]==================== */
@@ -350,7 +364,10 @@ int main(void)
 				break;
 			
 			case F_Manual_Mode:
-				
+				if (g_joystick_data_ready)
+				{
+					Handle_Manual_Control();
+				}
 			
 				break;
 			
@@ -367,6 +384,55 @@ int main(void)
 		
 	}//while(1)
 }//int main(void)
+
+
+
+
+/* =================== [START] 摇杆数据接收和电机底层控制模块 [START] =================== */
+
+void Handle_Manual_Control(void)
+{
+    // 1. 读取并清零标志和数据，这是原子操作，要快
+    int8_t LH = g_joystick_LH;
+    int8_t LV = g_joystick_LV;
+    // int8_t RH = g_joystick_RH; // 目前未使用
+    // int8_t RV = g_joystick_RV; // 目前未使用
+    
+    g_joystick_data_ready = 0; // 关键：立即清零标志
+
+    // 2. 死区处理
+    if (abs(LV) < DEAD_ZONE) LV = 0;
+    if (abs(LH) < DEAD_ZONE) LH = 0;
+    
+    // 3. 差分驱动计算
+    // 基础速度由纵向摇杆控制
+    int16_t base_speed = LV; 
+    
+    // 转向速度差由横向摇杆控制
+    // 将LH从[-100, 100]映射到[-base_speed, base_speed]
+    int16_t turn_speed = (int16_t)((float)LH * (float)abs(base_speed) / 100.0f);
+    
+    // 计算左右轮最终速度
+    int16_t left_motor_pwm = base_speed + turn_speed;
+    int16_t right_motor_pwm = base_speed - turn_speed;
+    
+    // 4. 速度限幅，防止超出电机控制范围
+    if (left_motor_pwm > MAX_SPEED) left_motor_pwm = MAX_SPEED;
+    if (left_motor_pwm < -MAX_SPEED) left_motor_pwm = -MAX_SPEED;
+    if (right_motor_pwm > MAX_SPEED) right_motor_pwm = MAX_SPEED;
+    if (right_motor_pwm < -MAX_SPEED) right_motor_pwm = -MAX_SPEED;
+
+    // 5. 输出到电机
+    // 注意：你需要确认Motor_SetPWM1和PWM2分别对应哪个轮子
+    // 假设 Motor_SetPWM1 -> 左后轮, Motor_SetPWM2 -> 右后轮
+    Motor_SetPWM1(left_motor_pwm);
+    Motor_SetPWM2(right_motor_pwm);
+}
+
+/* =================== [END] 摇杆数据接收和电机底层控制模块 [END] =================== */
+
+
+
 
 
 void TIM1_UP_IRQHandler(void)
