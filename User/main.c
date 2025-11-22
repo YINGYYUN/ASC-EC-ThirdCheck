@@ -409,8 +409,8 @@ void Handle_Tracking_Control(void)
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
 		OLED_Update();
-		printf("[display,0,48,                ]");
-		printf("[display,0,48,Go_Ahead]");
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Go_Ahead]");
 	}
 	else 
 	if ( sensorData[1] == 1 &&
@@ -423,8 +423,22 @@ void Handle_Tracking_Control(void)
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
 		OLED_Update();
-		printf("[display,0,48,                ]");
-		printf("[display,0,48,Go_Ahead]");
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Go_Ahead]");
+	}
+	else 
+	if ( sensorData[1] == 0 &&
+		 sensorData[0] == 0 &&
+		 sensorData[2] == 0 &&
+		 sensorData[3] == 0)
+	{
+		Go_Ahead();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
+		OLED_Update();
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Go_Ahead]");
 	}
 	else 
 	if ( sensorData[1] == 1 &&
@@ -437,8 +451,8 @@ void Handle_Tracking_Control(void)
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Turn_Left");
 		OLED_Update();
-		printf("[display,0,48,                ]");
-		printf("[display,0,48,Turn_Left]");
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Turn_Left]");
 	}
 	else 
 	if ( sensorData[1] == 1 &&
@@ -451,8 +465,8 @@ void Handle_Tracking_Control(void)
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Turn_Right");
 		OLED_Update();
-		printf("[display,0,48,                ]");
-		printf("[display,0,48,Turn_Right]");
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Turn_Right]");
 	}
 	else 
 	if ( sensorData[1] == 0 &&
@@ -465,8 +479,8 @@ void Handle_Tracking_Control(void)
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Self_Left");
 		OLED_Update();
-		printf("[display,0,48,                ]");
-		printf("[display,0,48,Self_Left]");
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Self_Left]");
 	}
 	else 
 	if ( sensorData[1] == 1 &&
@@ -479,8 +493,62 @@ void Handle_Tracking_Control(void)
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Self_Right");
 		OLED_Update();
-		printf("[display,0,48,                ]");
-		printf("[display,0,48,Self_Right]");
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Self_Right]");
+	}
+	if ( sensorData[1] == 0 &&
+		 sensorData[0] == 0 &&
+		 sensorData[2] == 0 &&
+		 sensorData[3] == 1)
+	{
+		Self_Left();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Left");
+		OLED_Update();
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Self_Left]");
+	}
+	else 
+	if ( sensorData[1] == 1 &&
+		 sensorData[0] == 0 &&
+		 sensorData[2] == 0 &&
+		 sensorData[3] == 0)
+	{
+		Self_Right();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Right");
+		OLED_Update();
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Self_Right]");
+	}
+	if ( sensorData[1] == 0 &&
+		 sensorData[0] == 1 &&
+		 sensorData[2] == 1 &&
+		 sensorData[3] == 1)
+	{
+		Self_Left();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Left");
+		OLED_Update();
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Self_Left]");
+	}
+	else 
+	if ( sensorData[1] == 1 &&
+		 sensorData[0] == 1 &&
+		 sensorData[2] == 1 &&
+		 sensorData[3] == 0)
+	{
+		Self_Right();
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Right");
+		OLED_Update();
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Self_Right]");
 	}
 }
 

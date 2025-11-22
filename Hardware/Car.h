@@ -1,7 +1,7 @@
 #ifndef __CAR_H
 #define __CAR_H
 
-#define Standard_Speed 80
+#define Standard_Speed 70
 
 void Go_Ahead(void);
 void Go_Back(void);
