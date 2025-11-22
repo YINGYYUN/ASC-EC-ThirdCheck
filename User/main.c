@@ -34,7 +34,17 @@ uint8_t g_joystick_data_ready = 0;//数据就绪标志
 void Handle_Manual_Control(void);
 
 //存放红外对射式传感器数据
-uint8_t sensorData[4];
+uint8_t Pre_sensorData[4];
+uint8_t Cur_sensorData[4];
+uint8_t Out_sensorData[4];
+
+//数据帧确认
+uint8_t Confirm_sensorData_Flag = 1;
+
+uint8_t Pre_Flag = F_Go_Ahead;
+uint8_t Cur_Flag = F_Go_Ahead;
+
+uint8_t Tracking_Mode_ENABLE = 0;
 
 void Handle_Tracking_Control(void);
 
@@ -227,10 +237,10 @@ int main(void)
 			{
 				
 			OLED_Printf(0, 16 * Main_Menu_Location , OLED_8X16, " ");
-			printf("[display,0,%d, ]", 16 * Main_Menu_Location);
+//			printf("[display,0,%d, ]", 16 * Main_Menu_Location);
 			Main_Menu_Location = (Main_Menu_Location - 1 -1 + 2) % 2 + 1;
 			OLED_Printf(0, 16 * Main_Menu_Location , OLED_8X16, ">");
-			printf("[display,0,%d,>]", 16 * Main_Menu_Location );
+//			printf("[display,0,%d,>]", 16 * Main_Menu_Location );
 			
 			OLED_Update();
 			}
@@ -246,10 +256,10 @@ int main(void)
 			{
 				
 			OLED_Printf(0, 16 * Main_Menu_Location, OLED_8X16, " ");
-			printf("[display,0,%d, ]", 16 * Main_Menu_Location);
+//			printf("[display,0,%d, ]", 16 * Main_Menu_Location);
 			Main_Menu_Location = (Main_Menu_Location -1 + 1) % 2 + 1;
 			OLED_Printf(0, 16 * Main_Menu_Location, OLED_8X16, ">");
-			printf("[display,0,%d,>]", 16 * Main_Menu_Location);
+//			printf("[display,0,%d,>]", 16 * Main_Menu_Location);
 			
 			OLED_Update();
 			}
@@ -274,16 +284,16 @@ int main(void)
 						OLED_Printf(0, 0, OLED_8X16, "Tracking Mode");
 						OLED_Printf(0, 16, OLED_8X16, "[2]  [1][3]  [4]");
 						OLED_Printf(0, 32, OLED_8X16, " %d    %d  %d    %d ",
-								sensorData[1], sensorData[0], sensorData[2], sensorData[3]);
+								Cur_sensorData[1], Cur_sensorData[0], Cur_sensorData[2], Cur_sensorData[3]);
 						
 						OLED_Update();
 						
-						printf("[display-clear]");
-					
+//						printf("[display-clear]");
+//					
 						printf("[display,0,0,Tracking Mode]");
-						printf("[display,0,16,|2|  |1||3|  |4|]");
-						printf("[display,0,32, %d    %d  %d    %d ]", 
-								sensorData[1], sensorData[0], sensorData[2], sensorData[3]);
+//						printf("[display,0,16,|2|  |1||3|  |4|]");
+//						printf("[display,0,32, %d    %d  %d    %d ]", 
+//								Cur_sensorData[1], Cur_sensorData[0], Cur_sensorData[2], Cur_sensorData[3]);
 					
 						break;
 					
@@ -295,8 +305,8 @@ int main(void)
 						
 						OLED_Update();
 						
-						printf("[display-clear]");
-					
+//						printf("[display-clear]");
+//					
 						printf("[display,0,0,Manual Mode]");
 					
 						break;
@@ -315,6 +325,8 @@ int main(void)
 					//一次停止指令
 					Car_Stop();
 				
+					Tracking_Mode_ENABLE = 0;
+				
 					OLED_Clear();
 	
 					OLED_Printf(0, 0, OLED_8X16, "Main Menu");
@@ -325,12 +337,12 @@ int main(void)
 					
 					OLED_Update();
 					
-					printf("[display-clear]");
+//					printf("[display-clear]");
 				
 					printf("[display,0,0,Main Menu]");
-					printf("[display,16,16,%s],", Main_Menu[0]);
-					printf("[display,16,32,%s],", Main_Menu[1]);
-					printf("[display,0,%d,>]", 16 * Main_Menu_Location);
+//					printf("[display,16,16,%s],", Main_Menu[0]);
+//					printf("[display,16,32,%s],", Main_Menu[1]);
+//					printf("[display,0,%d,>]", 16 * Main_Menu_Location);
 			}
 			
 		}
@@ -352,18 +364,21 @@ int main(void)
 				break;
 			
 			case F_Tracking_Mode:
-				//传感器数据读取
-				LineSensor_Read(sensorData);
+				
+				Tracking_Mode_ENABLE = 1;
+			
 			
 				OLED_Printf(0, 32, OLED_8X16, " %d    %d  %d    %d ",
-						sensorData[1], sensorData[0], sensorData[2], sensorData[3]);
+						Cur_sensorData[1], Cur_sensorData[0], Cur_sensorData[2], Cur_sensorData[3]);
 			
 				//传感器示意图 [M2]			 [M1] [M3]			[M4]
 				
 				OLED_Update();
 				
-				printf("[display,0,32, %d    %d  %d    %d ]", 
-						sensorData[1], sensorData[0], sensorData[2], sensorData[3]);					
+//				printf("[display,0,32, %d    %d  %d    %d ]", 
+//						Cur_sensorData[1], Cur_sensorData[0], Cur_sensorData[2], Cur_sensorData[3]);
+//				printf("[%d,%d,%d,%d]", 
+//						Cur_sensorData[1], Cur_sensorData[0], Cur_sensorData[2], Cur_sensorData[3]);
 			
 				Handle_Tracking_Control();
 			
@@ -392,19 +407,62 @@ int main(void)
 }//int main(void)
 
 
-
+uint8_t X1, X2, X3, X4;
 
 /* =================== [START] 自动巡线控制模块 [START] =================== */
 
 void Handle_Tracking_Control(void)
 {
+	
+	char Car_Flag [][16] = {"Go_Ahead", "Go_Back", "Turn_Left", "Turn_Right", 
+	"Self_Left1", "Self_Right1", "Self_Left2", "Self_Right2", "Car_Stop"};
 	//1为白,0为黑
-	if ( sensorData[1] == 1 &&
-		 sensorData[0] == 0 &&
-		 sensorData[2] == 0 &&
-		 sensorData[3] == 1)
+	
+	X1 = Out_sensorData[1];
+	X2 = Out_sensorData[0];
+	X3 = Out_sensorData[2];
+	X4 = Out_sensorData[3];
+	
+	if ( X1 == 1 &&
+		 X2 == 0 &&
+		 X3 == 0 &&
+		 X4 == 1)
 	{
 		Go_Ahead();
+		
+		Cur_Flag = F_Go_Ahead;
+		
+		OLED_Printf(0, 48, OLED_8X16, "                ");
+		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
+		OLED_Update();
+//		printf("[display,0,48,                ]");
+//		printf("[display,0,48,Go_Ahead]");
+	}
+//	else 
+//	if ( X1 == 1 &&
+//		 X2 == 1 &&
+//		 X3 == 1 &&
+//		 X4 == 1)
+//	{
+//		Go_Ahead();
+//		
+//		Cur_Flag = F_Go_Ahead;
+//		
+//		OLED_Printf(0, 48, OLED_8X16, "                ");
+//		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
+//		OLED_Update();
+////		printf("[display,0,48,                ]");
+////		printf("[display,0,48,Go_Ahead]");
+//	}
+	else 
+	if ( X1 == 0 &&
+		 X2 == 0 &&
+		 X3 == 0 &&
+		 X4 == 0)
+	{
+		Go_Ahead();
+		
+		Cur_Flag = F_Go_Ahead;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
@@ -413,40 +471,14 @@ void Handle_Tracking_Control(void)
 //		printf("[display,0,48,Go_Ahead]");
 	}
 	else 
-	if ( sensorData[1] == 1 &&
-		 sensorData[0] == 1 &&
-		 sensorData[2] == 1 &&
-		 sensorData[3] == 1)
-	{
-		Go_Ahead();
-		
-		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
-		OLED_Update();
-//		printf("[display,0,48,                ]");
-//		printf("[display,0,48,Go_Ahead]");
-	}
-	else 
-	if ( sensorData[1] == 0 &&
-		 sensorData[0] == 0 &&
-		 sensorData[2] == 0 &&
-		 sensorData[3] == 0)
-	{
-		Go_Ahead();
-		
-		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
-		OLED_Update();
-//		printf("[display,0,48,                ]");
-//		printf("[display,0,48,Go_Ahead]");
-	}
-	else 
-	if ( sensorData[1] == 1 &&
-		 sensorData[0] == 0 &&
-		 sensorData[2] == 1 &&
-		 sensorData[3] == 1)
+	if ( X1 == 1 &&
+		 X2 == 0 &&
+		 X3 == 1 &&
+		 X4 == 1)
 	{
 		Turn_Left();
+		
+		Cur_Flag = F_Turn_Left;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Turn_Left");
@@ -455,12 +487,14 @@ void Handle_Tracking_Control(void)
 //		printf("[display,0,48,Turn_Left]");
 	}
 	else 
-	if ( sensorData[1] == 1 &&
-		 sensorData[0] == 1 &&
-		 sensorData[2] == 0 &&
-		 sensorData[3] == 1)
+	if ( X1 == 1 &&
+		 X2 == 1 &&
+		 X3 == 0 &&
+		 X4 == 1)
 	{
 		Turn_Right();
+		
+		Cur_Flag = F_Turn_Right;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
 		OLED_Printf(0, 48, OLED_8X16, "Turn_Right");
@@ -469,86 +503,117 @@ void Handle_Tracking_Control(void)
 //		printf("[display,0,48,Turn_Right]");
 	}
 	else 
-	if ( sensorData[1] == 0 &&
-		 sensorData[0] == 0 &&
-		 sensorData[2] == 1 &&
-		 sensorData[3] == 1)
+	if ( X1 == 0 &&
+		 X2 == 0 &&
+		 X3 == 1 &&
+		 X4 == 1)
 	{
-		Self_Left();
+		Self_Left2();
+		
+		Cur_Flag = F_Self_Left2;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Self_Left");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Left2");
 		OLED_Update();
 //		printf("[display,0,48,                ]");
 //		printf("[display,0,48,Self_Left]");
 	}
 	else 
-	if ( sensorData[1] == 1 &&
-		 sensorData[0] == 1 &&
-		 sensorData[2] == 0 &&
-		 sensorData[3] == 0)
+	if ( X1 == 1 &&
+		 X2 == 1 &&
+		 X3 == 0 &&
+		 X4 == 0)
 	{
-		Self_Right();
+		Self_Right2();
+		
+		Cur_Flag = F_Self_Right2;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Self_Right");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Right2");
 		OLED_Update();
 //		printf("[display,0,48,                ]");
 //		printf("[display,0,48,Self_Right]");
 	}
-	if ( sensorData[1] == 0 &&
-		 sensorData[0] == 0 &&
-		 sensorData[2] == 0 &&
-		 sensorData[3] == 1)
+	if ( X1 == 0 &&
+		 X2 == 0 &&
+		 X3 == 0 &&
+		 X4 == 1)
 	{
-		Self_Left();
+		Self_Left1();
+		
+		Cur_Flag = F_Self_Left1;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Self_Left");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Left1");
 		OLED_Update();
 //		printf("[display,0,48,                ]");
 //		printf("[display,0,48,Self_Left]");
 	}
 	else 
-	if ( sensorData[1] == 1 &&
-		 sensorData[0] == 0 &&
-		 sensorData[2] == 0 &&
-		 sensorData[3] == 0)
+	if ( X1 == 1 &&
+		 X2 == 0 &&
+		 X3 == 0 &&
+		 X4 == 0)
 	{
-		Self_Right();
+		Self_Right1();
+		
+		Cur_Flag = F_Self_Right1;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Self_Right");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Right1");
 		OLED_Update();
 //		printf("[display,0,48,                ]");
 //		printf("[display,0,48,Self_Right]");
 	}
-	if ( sensorData[1] == 0 &&
-		 sensorData[0] == 1 &&
-		 sensorData[2] == 1 &&
-		 sensorData[3] == 1)
+	if ( X1 == 0 &&
+		 X2 == 1 &&
+		 X3 == 1 &&
+		 X4 == 1)
 	{
-		Self_Left();
+		Self_Left1();
+		
+		Cur_Flag = F_Self_Left1;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Self_Left");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Left1");
 		OLED_Update();
 //		printf("[display,0,48,                ]");
 //		printf("[display,0,48,Self_Left]");
 	}
 	else 
-	if ( sensorData[1] == 1 &&
-		 sensorData[0] == 1 &&
-		 sensorData[2] == 1 &&
-		 sensorData[3] == 0)
+	if ( X1 == 1 &&
+		 X2 == 1 &&
+		 X3 == 1 &&
+		 X4 == 0)
 	{
-		Self_Right();
+		Self_Right1();
+		
+		Cur_Flag = F_Self_Right1;
 		
 		OLED_Printf(0, 48, OLED_8X16, "                ");
-		OLED_Printf(0, 48, OLED_8X16, "Self_Right");
+		OLED_Printf(0, 48, OLED_8X16, "Self_Right1");
 		OLED_Update();
 //		printf("[display,0,48,                ]");
 //		printf("[display,0,48,Self_Right]");
+	}
+//	else
+//	{
+//		Go_Ahead();
+//		
+//		Cur_Flag = F_Go_Ahead;
+//		
+//		OLED_Printf(0, 48, OLED_8X16, "                ");
+//		OLED_Printf(0, 48, OLED_8X16, "Go_Ahead");
+//		OLED_Update();
+////		printf("[display,0,48,                ]");
+////		printf("[display,0,48,Go_Ahead]");
+//	}
+	
+	//如果更新了状态，通过蓝牙上传
+	if (Pre_Flag != Cur_Flag)
+	{
+		printf("%s\r\n", Car_Flag[Cur_Flag]);
+		Pre_Flag = Cur_Flag;
 	}
 }
 
@@ -601,8 +666,7 @@ void Handle_Manual_Control(void)
 /* =================== [END] 手动摇杆控制模块 [END] =================== */
 
 
-
-
+uint16_t TIM1_TimeTick;
 
 void TIM1_UP_IRQHandler(void)
 {
@@ -610,6 +674,36 @@ void TIM1_UP_IRQHandler(void)
 	if (TIM_GetITStatus(TIM1,TIM_IT_Update) == SET )
 	{
 		Key_Tick();
+		
+		if (Tracking_Mode_ENABLE)
+		{
+			TIM1_TimeTick ++;
+			
+			if(TIM1_TimeTick > 10)
+			{
+			//传感器数据读取
+			//Pre_sensorData
+			//Cur_sensorData
+			//Out_sensorData
+			
+			LineSensor_Read(Cur_sensorData);
+			
+			if( memcmp (Pre_sensorData, Cur_sensorData, 4) == 0) 
+			{
+				Confirm_sensorData_Flag ++;
+			}
+			else
+			{
+				Confirm_sensorData_Flag = 1;
+			}
+			memcpy(Pre_sensorData, Cur_sensorData, 4);
+			
+			if(Confirm_sensorData_Flag >= 3)memcpy(Out_sensorData, Cur_sensorData, 4);
+			
+			
+			TIM1_TimeTick = 0;				
+			}
+		}
 		//清除标志位
 		TIM_ClearITPendingBit(TIM1,TIM_IT_Update);
 	}
