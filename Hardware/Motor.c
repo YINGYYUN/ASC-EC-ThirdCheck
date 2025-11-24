@@ -18,7 +18,7 @@ void Motor_Init(void)
 //设置一号电机PWM占空比和电机方向（此处开环）
 void Motor_SetPWM1(int16_t Speed)
 {
-	Speed *= 1.5;
+	Speed *= 1.2;
     if (Speed >= 100) Speed = 99;
     if (Speed <= -100) Speed = -99;
 	if (Speed >= 0)
@@ -44,7 +44,7 @@ void Motor_SetPWM1(int16_t Speed)
 //设置二号电机PWM占空比和电机方向（此处开环）
 void Motor_SetPWM2(int16_t Speed)
 {
-	Speed *= 0.8;
+	Speed *= 0.9;
     if (Speed >= 100) Speed = 99;
     if (Speed <= -100) Speed = -99;
 	if (Speed >= 0)
@@ -63,6 +63,6 @@ void Motor_SetPWM2(int16_t Speed)
 	{
 		GPIO_SetBits(GPIOB, GPIO_Pin_14);
 		GPIO_SetBits(GPIOB, GPIO_Pin_15);
-		PWM_SetCompare3(-Speed);
+		PWM_SetCompare3(Speed);
 	}
 }

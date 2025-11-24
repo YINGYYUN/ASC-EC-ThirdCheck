@@ -437,7 +437,7 @@ void Handle_Tracking_Control(void)
 		{
 			Go_Ahead();
 			
-			CrossRoad_Delay_TimeTicks = 500;
+			CrossRoad_Delay_TimeTicks = 40;
 			
 			Cur_Flag = F_Go_Ahead;
 			SingleLine_Confirm_Flag = 0;
@@ -466,9 +466,9 @@ void Handle_Tracking_Control(void)
 //		}
 		else 
 		if ( X1 == 1 &&
-			X2 == 0 &&
-			X3 == 0 &&
-			X4 == 1)
+			 X2 == 0 &&
+			 X3 == 0 &&
+			 X4 == 1)
 		{
 			Go_Ahead();
 		
@@ -544,6 +544,7 @@ void Handle_Tracking_Control(void)
 //			printf("[display,0,48,                ]");
 //			printf("[display,0,48,Self_Right]");
 		}
+		else 
 		if ( X1 == 0 &&
 			 X2 == 0 &&
 			 X3 == 0 &&
@@ -562,7 +563,7 @@ void Handle_Tracking_Control(void)
 			}
 			else if (SingleLine_Confirm_Flag == 0)
 			{
-				SingleLine_Delay_TimeTicks = 20;
+				SingleLine_Delay_TimeTicks = 15;
 				
 				Go_Ahead();
 		
@@ -579,7 +580,7 @@ void Handle_Tracking_Control(void)
 				
 				SingleLine_Confirm_Flag = 0;
 				
-				SingleLine_CoolDown_TimeTicks = 400;
+				SingleLine_CoolDown_TimeTicks = 90;
 			}
 			
 
@@ -605,7 +606,7 @@ void Handle_Tracking_Control(void)
 			}
 			else if (SingleLine_Confirm_Flag == 0)
 			{
-				SingleLine_Delay_TimeTicks = 20;
+				SingleLine_Delay_TimeTicks = 15;
 				
 				Go_Ahead();
 		
@@ -622,7 +623,7 @@ void Handle_Tracking_Control(void)
 				
 				SingleLine_Confirm_Flag = 0;
 				
-				SingleLine_CoolDown_TimeTicks = 400;
+				SingleLine_CoolDown_TimeTicks = 90;
 			}
 			
 			
@@ -635,6 +636,7 @@ void Handle_Tracking_Control(void)
 //			printf("[display,0,48,                ]");
 //			printf("[display,0,48,Self_Right]");
 		}
+		else
 		if ( X1 == 0 &&
 			 X2 == 1 &&
 			 X3 == 1 &&
@@ -758,7 +760,7 @@ void TIM1_UP_IRQHandler(void)
 		{
 			TIM1_TimeTicks ++;
 			
-			if(TIM1_TimeTicks > 10)
+			if(TIM1_TimeTicks > 2)
 			{
 			//传感器数据读取
 			//Pre_sensorData

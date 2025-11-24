@@ -1,10 +1,10 @@
 #ifndef __CAR_H
 #define __CAR_H
 
-#define Standard_Speed_1 80
-#define Standard_Speed_2 80
-#define Standard_Speed_3 80
-#define Standard_Speed_4 60
+//#define Standard_Speed_1 75
+//#define Standard_Speed_2 75
+//#define Standard_Speed_3 75
+//#define Standard_Speed_4 60
 
 void Go_Ahead(void);//1
 void Go_Back(void);//1
