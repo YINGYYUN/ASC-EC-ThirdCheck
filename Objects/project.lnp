@@ -36,7 +36,6 @@
 ".\objects\oled_data.o"
 ".\objects\linesensor.o"
 ".\objects\car.o"
-".\objects\encoder.o"
 ".\objects\main.o"
 ".\objects\stm32f10x_it.o"
 --library_type=microlib --strict --scatter ".\Objects\project.sct"

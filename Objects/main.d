@@ -37,7 +37,6 @@
 .\objects\main.o: .\Hardware\Car.h
 .\objects\main.o: .\Hardware\Motor.h
 .\objects\main.o: .\Hardware\LineSensor.h
-.\objects\main.o: .\Hardware\Encoder.h
 .\objects\main.o: D:\KeilC51\ARM\ARMCC\Bin\..\include\string.h
 .\objects\main.o: D:\KeilC51\ARM\ARMCC\Bin\..\include\math.h
 .\objects\main.o: D:\KeilC51\ARM\ARMCC\Bin\..\include\stdlib.h

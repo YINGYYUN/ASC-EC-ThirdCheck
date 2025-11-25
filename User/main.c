@@ -10,7 +10,6 @@
 #include "Motor.h"
 //#include "OLED.h"
 #include "LineSensor.h"
-#include "Encoder.h"
 
 #include <string.h>
 #include <math.h>
@@ -34,9 +33,9 @@ uint8_t g_joystick_data_ready = 0;//数据就绪标志
 void Handle_Manual_Control(void);
 
 //存放红外对射式传感器数据
-uint8_t Pre_sensorData[4];
+//uint8_t Pre_sensorData[4];
 uint8_t Cur_sensorData[4];
-uint8_t Out_sensorData[4];
+//uint8_t Out_sensorData[4];
 
 //数据帧确认与状态（用于定时判定十字路口、单线等）
 uint8_t Confirm_sensorData_Flag = 1;
@@ -50,14 +49,6 @@ static float KI = 0.0f;
 // 积分系数（范围0~0.5，步距0.01）
 static float KD = 0.2f;   
 // 微分系数（范围0~2.0，步距0.1）
-
-int16_t Actual1;
-float Target1, Out1;
-float Error01, Error11 ,ErrorInt1;
-
-int16_t Actual2;
-float Target2, Out2;
-float Error02, Error12 ,ErrorInt2;
 
 // 巡线方向权重定义
 static int8_t W14 = 4;     
@@ -76,7 +67,6 @@ int main(void)
 	Motor_Init();
 //	OLED_Init();
 	LineSensor_Init();
-	Encoder_Init();
 	
 	Timer_Init();
 
@@ -398,26 +388,81 @@ void Handle_Tracking_Control(void)
 {
     LineSensor_Read(Cur_sensorData);		
 	
-	if( memcmp (Pre_sensorData, Cur_sensorData, 4) == 0) 
-	{
-		Confirm_sensorData_Flag ++;
-	}
-	else
-	{
-		Confirm_sensorData_Flag = 1;
-	}
-	memcpy(Pre_sensorData, Cur_sensorData, 4);
+//	if( memcmp (Pre_sensorData, Cur_sensorData, 4) == 0) 
+//	{
+//		Confirm_sensorData_Flag ++;
+//	}
+//	else
+//	{
+//		Confirm_sensorData_Flag = 1;
+//	}
+//	memcpy(Pre_sensorData, Cur_sensorData, 4);
 	
-	if(Confirm_sensorData_Flag >= 2)memcpy(Out_sensorData, Cur_sensorData, 4);
+//	if(Confirm_sensorData_Flag >= 2)memcpy(Out_sensorData, Cur_sensorData, 4);
     
     // 传感器位置映射
-    X1 = Out_sensorData[1];  // 左外侧
-    X2 = Out_sensorData[0];  // 左内侧
-    X3 = Out_sensorData[2];  // 右内侧
-    X4 = Out_sensorData[3];  // 右外侧
+//    X1 = Out_sensorData[1];  // 左外侧
+//    X2 = Out_sensorData[0];  // 左内侧
+//    X3 = Out_sensorData[2];  // 右内侧
+//    X4 = Out_sensorData[3];  // 右外侧
+	
+	X1 = Cur_sensorData[1];  // 左外侧
+    X2 = Cur_sensorData[0];  // 左内侧
+    X3 = Cur_sensorData[2];  // 右内侧
+    X4 = Cur_sensorData[3];  // 右外侧
 	
 	printf("[display,0,32, %d    %d  %d    %d ]",X1, X2, X3, X4);
-	
+
+	// -------- 巡线PID控制开始 --------
+	// 说明：
+	// 传感器逻辑：1 表示白，0 表示黑（目标为沿黑线行驶，期望 error -> 0）
+	// 偏差计算（用户提供的权重公式）：
+	// error = X1*(-W14) + X2*(-W23) + X3*W23 + X4*W14
+	// 当黑线在正中间时，误差应接近0；向左为负，向右为正。
+
+	// 基础速度（可通过蓝牙或宏调整）
+	static int16_t BASE_SPEED = 30; // 默认基速（0~MAX_SPEED），根据需要调整
+
+	// PID 状态（保持在函数间）
+	static float prev_error = 0.0f;
+	static float integral = 0.0f;
+
+	// 计算误差（按要求的权重组合）
+	float error = (float)(- (int)W14 * (int)X1
+						 - (int)W23 * (int)X2
+						 + (int)W23 * (int)X3
+						 + (int)W14 * (int)X4);
+
+	// 积分项累加并限幅（防止积分饱和）
+	integral += error;
+	const float INTEGRAL_LIMIT = 200.0f;
+	if (integral > INTEGRAL_LIMIT) integral = INTEGRAL_LIMIT;
+	if (integral < -INTEGRAL_LIMIT) integral = -INTEGRAL_LIMIT;
+
+	// 微分项（位置式PID使用当前误差与上次误差差值）
+	float derivative = error - prev_error;
+
+	// PID 输出（作为转向修正量）
+	float pid_output = KP * error + KI * integral + KD * derivative;
+
+	// 保存当前误差供下次微分使用
+	prev_error = error;
+
+	// 计算左右轮目标速度
+	int16_t left_speed  = (int16_t)roundf((float)BASE_SPEED + pid_output);
+	int16_t right_speed = (int16_t)roundf((float)BASE_SPEED - pid_output);
+
+	// 对速度进行限幅（电机驱动允许范围 -MAX_SPEED..MAX_SPEED）
+	if (left_speed > MAX_SPEED) left_speed = MAX_SPEED;
+	if (left_speed < -MAX_SPEED) left_speed = -MAX_SPEED;
+	if (right_speed > MAX_SPEED) right_speed = MAX_SPEED;
+	if (right_speed < -MAX_SPEED) right_speed = -MAX_SPEED;
+
+	// 输出到电机（M1/M2 接口）
+	Motor_SetPWM1(left_speed);
+	Motor_SetPWM2(right_speed);
+
+	// -------- 巡线PID控制结束 --------
 	
 	
 	
@@ -506,10 +551,7 @@ void TIM1_UP_IRQHandler(void)
 			if(TIM1_TimeTicks > 100)
 			{					
 			TIM1_TimeTicks = 0;
-				
-			Actual1 = Encoder1_Get();
-			Actual2 = Encoder2_Get();
-			printf("[%d,%d]", Actual1, Actual2);
+
 			
 			}
 		}

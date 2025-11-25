@@ -765,16 +765,6 @@
               <FileType>5</FileType>
               <FilePath>.\Hardware\Car.h</FilePath>
             </File>
-            <File>
-              <FileName>Encoder.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\Hardware\Encoder.h</FilePath>
-            </File>
-            <File>
-              <FileName>Encoder.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Hardware\Encoder.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
