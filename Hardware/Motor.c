@@ -51,18 +51,18 @@ void Motor_SetPWM2(int16_t Speed)
 	{
 		GPIO_SetBits(GPIOB, GPIO_Pin_14);
 		GPIO_ResetBits(GPIOB, GPIO_Pin_15);
-		PWM_SetCompare3(Speed);
+		PWM_SetCompare1(Speed);
 	}
 	else if (Speed < 0)
 	{
 		GPIO_ResetBits(GPIOB, GPIO_Pin_14);
 		GPIO_SetBits(GPIOB, GPIO_Pin_15);
-		PWM_SetCompare3(-Speed);
+		PWM_SetCompare1(-Speed);
 	}
 	else
 	{
 		GPIO_SetBits(GPIOB, GPIO_Pin_14);
 		GPIO_SetBits(GPIOB, GPIO_Pin_15);
-		PWM_SetCompare3(Speed);
+		PWM_SetCompare1(Speed);
 	}
 }
